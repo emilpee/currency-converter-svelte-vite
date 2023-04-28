@@ -1,5 +1,6 @@
 <script lang="ts">
   export let num: number;
+  export let id: string;
 </script>
 
-<input bind:value={num} on:change type="number" />
+<input {id} bind:value={num} on:change type="number" />
