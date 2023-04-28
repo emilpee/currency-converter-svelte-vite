@@ -35,19 +35,29 @@
     return Object.entries(dummyData.eur).find(([currency]) => currency === c);
   };
 
-  const onInputChange = (e, value, currency) => {
-    value = e.target.value;
-    const [_, currencyValue] = getCurrencyVal(currency);
-    value2 = compareCurrencies(currencyValue, value1) * value;
+  const onInputChange = (e: Event) => {
+    const target = e.target as HTMLInputElement;
+
+    if (target.id === "1") {
+      value1 = Number(target.value);
+      const [_, currencyValue] = getCurrencyVal(currency2);
+      value2 = currencyValue * value1;
+    } else if (target.id === "2") {
+      value2 = Number(target.value);
+      const [_, currencyValue] = getCurrencyVal(currency2);
+      value1 = compareCurrencies(value2, currencyValue);
+    }
   };
 
   const onCurrencyChange = (e: Event) => {
-    if (e.target.id === "1") {
-      currency1 = (e.target as HTMLInputElement).value;
+    const target = e.target as HTMLInputElement;
+
+    if (target.id === "1") {
+      currency1 = target.value;
       const [_, currencyVal] = getCurrencyVal(currency1);
       value1 = compareCurrencies(currencyVal, value2) * value2;
-    } else if (e.target.id === "2") {
-      currency2 = (e.target as HTMLInputElement).value;
+    } else if (target.id === "2") {
+      currency2 = target.value;
       const [_, currencyVal] = getCurrencyVal(currency2);
       value2 = compareCurrencies(currencyVal, value1) * value1;
     }
@@ -62,11 +72,7 @@
       selectedCurrency={currency1}
       on:change={(e) => onCurrencyChange(e)}
     />
-    <CurrencyInput
-      id={"1"}
-      on:change={(e) => onInputChange(e, value1, currency2)}
-      num={value1}
-    />
+    <CurrencyInput id={"1"} on:change={(e) => onInputChange(e)} num={value1} />
   </div>
   <div>
     <CurrencySelector
@@ -75,16 +81,12 @@
       currencies={Object.keys(dummyData.eur)}
       on:change={(e) => onCurrencyChange(e)}
     />
-    <CurrencyInput
-      id={"2"}
-      on:change={(e) => onInputChange(e, value2, currency1)}
-      num={value2}
-    />
+    <CurrencyInput id={"2"} on:change={(e) => onInputChange(e)} num={value2} />
   </div>
 </div>
 
 <div class="output">
-  <Output sum={0} />
+  <Output sum={value2} />
 </div>
 
 <style>
