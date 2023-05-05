@@ -1,66 +1,92 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import axios from "axios";
+  // import axios from "axios";
 
-  import dummyData from "../data/currencyData.json";
+  import currencyData from "../data/currencyData.json";
   import CurrencyInput from "./CurrencyInput.svelte";
   import CurrencySelector from "./CurrencySelector.svelte";
   import Output from "./Output.svelte";
 
-  let currencies = ["SEK", "GBP", "USD"];
-  const { VITE_CURRENCY_API_ENDPOINT } = import.meta.env;
+  // let currencies = ["SEK", "GBP", "USD"];
+  // const { VITE_CURRENCY_API_ENDPOINT } = import.meta.env;
 
-  onMount(() => {
-    const getCurrencies = async () =>
-      await axios.get(VITE_CURRENCY_API_ENDPOINT);
-    if (currencies.length === 0)
-      getCurrencies()
-        .then(({ data }) => (currencies = data))
-        .catch((e) => console.error("Error fetching currencies: ", e));
-  });
+  // onMount(() => {
+  //   const getCurrencies = async () =>
+  //     await axios.get(VITE_CURRENCY_API_ENDPOINT);
+  //   if (currencies.length === 0)
+  //     getCurrencies()
+  //       .then(({ data }) => (currencies = data))
+  //       .catch((e) => console.error("Error fetching currencies: ", e));
+  // });
 
-  let currency1 = "eur";
-  let currency2 = "sek";
-  let value1: number = 1;
-  let value2: number;
+  const fields = [
+    {
+      id: "1",
+      currency: "eur",
+      value: 1,
+    },
+    {
+      id: "2",
+      currency: "sek",
+      value: 0,
+    },
+  ];
+
+  const [firstField, secondField] = fields;
 
   const compareCurrencies = (rate1, rate2) => rate1 / rate2;
 
   onMount(() => {
-    const [_, currencyValue] = getCurrentValue(currency2);
-    value2 = compareCurrencies(currencyValue, value1);
+    const currencyValue = getCurrentValue(secondField.currency);
+    secondField.value = compareCurrencies(currencyValue, firstField.value);
   });
 
   const getCurrentValue = (c: string) => {
-    return Object.entries(dummyData.eur).find(([currency]) => currency === c);
+    let curValue = 0;
+    Object.entries(currencyData.eur).forEach(([currency, value]) => {
+      if (c === currency) curValue = value;
+    });
+    return curValue;
   };
 
   const onInputChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
+    let currentField = fields.find((field) => field.id === target.id);
+    let otherField = fields.find((field) => field.id !== target.id);
 
-    if (target.id === "1") {
-      value1 = Number(target.value);
-      const [_, currencyValue] = getCurrentValue(currency2);
-      value2 = currencyValue * value1;
-    } else if (target.id === "2") {
-      value2 = Number(target.value);
-      const [_, currencyValue] = getCurrentValue(currency2);
-      value1 = compareCurrencies(value2, currencyValue);
-    }
+    currentField.value = Number(target.value);
+
+    const currencyValue = getCurrentValue(
+      firstField.id === currentField.id
+        ? otherField.currency
+        : currentField.currency,
+    );
+
+    firstField.id === currentField.id
+      ? (secondField.value = currencyValue * currentField.value)
+      : (firstField.value = compareCurrencies(
+          currentField.value,
+          currencyValue,
+        ));
   };
 
   const onCurrencyChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
+    let currentField = fields.find((field) => field.id === target.id);
+    let otherField = fields.find((field) => field.id !== target.id);
 
-    if (target.id === "1") {
-      currency1 = target.value;
-      const [_, currencyVal] = getCurrentValue(currency1);
-      value1 = compareCurrencies(currencyVal, value2) * value2;
-    } else if (target.id === "2") {
-      currency2 = target.value;
-      const [_, currencyVal] = getCurrentValue(currency2);
-      value2 = compareCurrencies(currencyVal, value1) * value1;
-    }
+    currentField.currency = target.value;
+    const currencyValue = getCurrentValue(
+      firstField.id === currentField.id
+        ? otherField.currency
+        : currentField.currency,
+    );
+    firstField.id === currentField.id
+      ? (secondField.value = currencyValue * currentField.value)
+      : (firstField.value = compareCurrencies(
+          currentField.value,
+          currencyValue,
+        ));
   };
 </script>
 
@@ -69,13 +95,15 @@
     <div>
       <CurrencySelector
         {id}
-        currencies={Object.keys(dummyData.eur)}
-        selectedCurrency={id === "1" ? currency1 : currency2}
+        currencies={Object.keys(currencyData.eur)}
+        selectedCurrency={id === "1"
+          ? firstField.currency
+          : secondField.currency}
         on:change={(e) => onCurrencyChange(e)}
       />
       <CurrencyInput
         {id}
-        num={id === "1" ? value1 : value2}
+        num={id === "1" ? firstField.value : secondField.value}
         on:change={(e) => onInputChange(e)}
       />
     </div>
@@ -83,7 +111,7 @@
 </div>
 
 <div class="output">
-  <Output sum={value2} />
+  <Output sum={secondField.value} />
 </div>
 
 <style>
