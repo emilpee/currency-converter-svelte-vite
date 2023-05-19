@@ -4,7 +4,7 @@
   export let id;
 </script>
 
-<select {id} on:change>
+<select data-testid="test" {id} on:change>
   {#each currencies as currency}
     <option selected={selectedCurrency === currency} value={currency}
       >{currency.toUpperCase()}</option
